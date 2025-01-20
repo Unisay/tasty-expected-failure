@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Control.Concurrent (threadDelay)
 import Test.Tasty
 import Test.Tasty.ExpectedFailure
@@ -26,7 +28,11 @@ main = defaultMain $
 
   , expectFail $ testCase "takes too long" $ threadDelay 2000000
 
-  , expectFail $ goldenVsString "hello" "hello.out" $ return $ error "not golden"
+  , expectFail $ goldenVsString "hello_golden_err" "hello_err.out" $
+      return $ error "not golden"
+
+  , expectFail $ goldenVsString "hello_golden" "hello.out" $
+      return "good bye!"
 
   -- Issue 24
   , expectFail $ testCase "this is expected to fail"

@@ -11,6 +11,7 @@ import Test.Tasty.Providers.ConsoleFormat ( ResultDetailsPrinter(..) )
 import Test.Tasty ( Timeout(..), askOption, localOption )
 import Data.Typeable
 import Data.Tagged
+import Data.List ( isPrefixOf )
 import Data.Maybe
 import Data.Monoid
 import Control.Exception ( displayException, evaluate, try, SomeException )
@@ -130,6 +131,11 @@ expectFail' :: Maybe String -> TestTree -> TestTree
 expectFail' reason = wrapTest (fmap change)
   where
     change r
+        | goldenAccepted r
+        = r { resultOutcome = Success
+            , resultDescription = resultDescription r 
+            , resultShortDescription = resultShortDescription r <> " (accepted)"
+            }
         | resultSuccessful r
         = r { resultOutcome = Failure TestFailed
             , resultDescription = resultDescription r <> " (unexpected success" <> comment <> ")"
@@ -144,6 +150,11 @@ expectFail' reason = wrapTest (fmap change)
     t  `append` s | last t == '\n' = t ++ s ++ "\n"
                   | otherwise      = t ++ "\n" ++ s
     comment = maybe "" (mappend ": ") reason
+
+    goldenAccepted r
+        | "Accepted the new version" `isPrefixOf` resultDescription r = True
+        | "Golden file did not exist; created" == resultDescription r = True
+        | otherwise = False
 
 -- | Prevents the tests from running and reports them as succeeding.
 --
